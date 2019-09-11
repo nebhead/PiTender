@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+    <!-- Adding a Favicon -->
+     <link href="{{ url_for('static', filename='img/favicon.ico') }}" rel="icon" type="image/x-icon" />
+
+    <!-- WebApp Manifest -->
+    <link rel="manifest" href="{{ url_for('manifest') }}">
+
+    <title>PiTender App</title>
+
+  </head>
+	<body>
+
+		<!-- Navbar Header -->
+		<nav class="navbar sticky-top navbar-dark bg-dark">
+
+			<a class="navbar-brand" href="#">
+				<img src="{{ url_for('static', filename='img/launcher-icon-1x.png') }}" width="30" height="30" class="d-inline-block align-top" alt="">
+				PiTender</a>
+
+				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+
+				<div class="collapse navbar-collapse" id="navbarNav">
+					<ul class="navbar-nav">
+						<li class="nav-item">
+							<a class="nav-link" href="/">Main Menu</a>
+						</li>
+						<li class="nav-item active">
+							<a class="nav-link" href="#">Settings <span class="sr-only">(current)</span></a>
+						</li>
+					</ul>
+				</div>
+
+		</nav>
+		<br>
+
+		<!-- Main Body Container -->
+    <div class="container">
+
+      <!-- Settings Success -->
+      {% if (action == "settings") and (errorcode == 0) %}
+        <div class="alert alert-success">
+          <b> Settings Updated Successfully.</b>
+        </div>
+			{% elif (action == "settings") and (errorcode == 1) %}
+        <div class="alert alert-danger">
+					{% for index in errormessage %}
+          <b>{{ index }}</b><br>
+					{% endfor %}
+        </div>
+      {% endif %}
+      <br>
+      <!-- Settings Card -->
+      <form name="input" action="/admin/settings" method="POST">
+        <div class="card">
+  				<div class="card-header">
+  							Inventory
+  				</div>
+  				<div class="card-body">
+						<table class="table">
+						    <thead>
+						      <tr>
+						        <th>Pump</th>
+						        <th>GPIO Assignment</th>
+						        <th>Drink Ingredient</th>
+						      </tr>
+						    </thead>
+						    <tbody>
+									{% for pump_number, pin_number in settings['assignments'].items()|sort %}
+						      <tr>
+						        <td>{{ pump_number }}</td>
+						        <td>
+											<div class="form-group">
+											  <select class="form-control" id="ass_{{ pump_number }}" name="ass_{{ pump_number }}">
+													{% for pin_index in available_GPIOs|sort %}
+														{% if (pin_index == pin_number) and (pin_index == 0) %}
+															<option selected value="{{ pin_index }}">Un-Assigned</option>
+														{% elif (pin_index == pin_number) %}
+														  <option selected value="{{ pin_index }}">{{ pin_index }}</option>
+														{% elif (pin_index == 0) %}
+															<option value="{{ pin_index }}">Un-Assigned</option>
+														{% else %}
+															<option value="{{ pin_index }}">{{ pin_index }}</option>
+														{% endif %}
+													{% endfor %}
+											  </select>
+											</div>
+										</td>
+						        <td>
+											<div class="form-group">
+												<select class="form-control" id="inv_{{ pump_number }}" name="inv_{{ pump_number }}">
+													{% for ingredient_index, ingredient_name in drink_db['ingredients'].items()|sort %}
+														{% if ingredient_index == settings['inventory'][pump_number] %}
+															<option selected value="{{ ingredient_index }}">{{ ingredient_name }}</option>
+														{% else %}
+															<option value="{{ ingredient_index }}">{{ ingredient_name }}</option>
+														{% endif %}
+													{% endfor %}
+												</select>
+											</div>
+
+										</td>
+						      </tr>
+									{% endfor %}
+						    </tbody>
+						  </table>
+						<button type="submit" class="btn btn-primary btn-sm">Save Settings</button>
+          </div>
+        </div>
+      </form>
+      <br>
+			<!-- Clean Function Card -->
+			<form name="input" action="/admin/clean" method="POST">
+        <div class="card">
+  				<div class="card-header">
+  							Cleaning
+  				</div>
+  				<div class="card-body">
+						After you use the bartender, you'll want to flush out the pump tubes in order to avoid bacterial growth. There is an easy way to do this in the settings menu. Hook all the tubes up to a water source, then navigate to Settings->Cleaning, select the pump to clean or clean all pumps, then touch Start Cleaning. All pumps will turn on to flush the existing liquid from the tubes. It is recommended to take the tubes out of the water source halfway through to remove all liquid from the pumps. <b>Important:</b> make sure you have a glass under the funnel to catch the flushed out liquid.
+
+						<div class="form-group">
+							<select class="form-control" id="clean" name="clean">
+								<option selected value="pump_42">Clean ALL</option>
+								{% for pump_number, pin_number in settings['assignments'].items()|sort %}
+									<option value="{{ pump_number }}">{{ pump_number }}</option>
+								{% endfor %}
+							</select>
+						</div>
+
+					<button type="submit" class="btn btn-primary btn-sm">Start Cleaning</button>
+				</div>
+			</div>
+			</form>
+			<br>
+			
+      <!-- Admin Functions Card -->
+			<div class="card">
+				<div class="card-header">
+							Administrative Functions
+				</div>
+				<div class="card-body">
+						<!-- Reboot -->
+						<form name="input" action="/admin/reboot">
+							<!-- Button trigger modal -->
+							<button type="button" class="btn btn-warning btn-block" data-toggle="modal" data-target="#rebootModal">
+								Reboot System
+							</button>
+
+							<!-- Reboot Modal -->
+							<div class="modal fade" id="rebootModal" tabindex="-1" role="dialog" aria-labelledby="rebootModalLabel" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="rebootModalLabel">Reboot</h5>
+											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+												<span aria-hidden="true">&times;</span>
+											</button>
+										</div>
+										<div class="modal-body">
+											<p>Are you sure you would like to reboot the system?
+											<br><i>Any unsaved data may be lost.</i></p>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+											<button type="submit" class="btn btn-primary" name="reboot" value="True">Confirm</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+						</form>
+
+						<br>
+						<!-- Shutdown -->
+						<form name="input" action="/admin/shutdown">
+							<!-- Button trigger modal -->
+							<button type="button" class="btn btn-danger btn-block" data-toggle="modal" data-target="#shutdownModal">
+								Shutdown System
+							</button>
+
+							<!-- Shutdown Modal -->
+							<div class="modal fade" id="shutdownModal" tabindex="-1" role="dialog" aria-labelledby="shutdownModalLabel" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="shutdownModalLabel">Shutdown</h5>
+											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+												<span aria-hidden="true">&times;</span>
+											</button>
+										</div>
+										<div class="modal-body">
+											<p>Are you sure you would like to shutdown the system?
+											<br><i>Any unsaved data may be lost.  System must be manually started after a shutdown.</i></p>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+											<button type="submit" class="btn btn-primary" name="shutdown" value="True">Confirm</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</form>
+
+					</div>
+				</div>
+			<br>
+
+			<div class="card">
+				<div class="card-header">
+							System Info
+				</div>
+	      <div class="card-body">
+					<b>CPU Info</b><br>
+	        {% for line in cpuinfo %}
+	          {{ line }}<br>
+	        {% endfor %}
+					<br>
+					<p><b>CPU Temperature:</b> {{ temp }}</p>
+					<br>
+					<b>Network Info</b><br>
+					{% for lines in ifconfig %}
+						{{ lines }}<br>
+					{% endfor %}
+	      </div>
+			</div>
+			<br>
+
+			<div class="card">
+				<div class="card-header">
+							Uptime
+				</div>
+	      <div class="card-body">
+					{{ uptime }}
+				</div>
+	    </div>
+			<br>
+
+      <!-- *********** Credits *************** -->
+				<div class="card">
+					<div class="card-header">
+						Credits and Licenses
+					</div>
+
+          <div class="card card-body">
+            <p>Web Application created by <a href="https://parmeter.net/tech" target="blank">Ben Parmeter</a>, copyright 2019. Check out my other projects on <a href="https://github.com/nebhead" target="blank">GitHub.</a></p>
+            <p><i>If you enjoy this software and feel the need to donate a cup of coffee, a frosty beer or a bottle of wine to the developer you can click <a href="https://paypal.me/benparmeter" target="blank">here.</a></i></p>
+            <p><i>Of course, none of this project would be available without the wonderful and amazing folks below... </i></p><br>
+            <ul class="list-group">
+              <li class="list-group-item"><b>Bootstrap</b> - Based entirely on Bootstrap 4.  Bootstrap is released under the MIT license and is copyright 2018 Twitter. (<a href="http://getbootstrap.com" target="blank">getbootstrap.com</a>)</li>
+              <li class="list-group-item"><b>JQuery</b> - Required by Bootstrap. Copyright JS Foundation and other contributors. Released under MIT license. (<a href="https://jquery.org/license/" target="blank">jquery.org/license</a>)</li>
+              <li class="list-group-item"><b>Popper</b> - Required by Bootstrap. Copyright 2016, 2018 FEDERICO ZIVOLO & CONTRIBUTORS. Released under MIT license. (<a href="https://popper.js.org/" target="blank">popper.js.org</a>)</li>
+            </ul>
+          </div>
+				</div>
+					<br><br><br>
+
+        <!-- Footer -->
+				<div class="container">
+					<nav class="navbar fixed-bottom navbar-light" style="background-color: #e3f2fd;">
+						<span class="navbar-text">
+					    Web Application created by Ben Parmeter, copyright 2019.
+					  </span>
+		 			</nav>
+				</div>
+			<!-- Optional JavaScript -->
+			<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+			<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+		</body>
+		</html>
