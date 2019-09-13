@@ -61,6 +61,8 @@ def index():
 		num_drinks = 1
 		errorcode = 1
 
+	print (drinklist)
+
 	return render_template('index.html', drinklist=drinklist, num_drinks=num_drinks, errorcode=errorcode)
 
 @app.route('/work/<action>', methods=['POST','GET'])

@@ -209,7 +209,7 @@ def InitGPIO(settings):
 	# Init GPIO's to default values / behavior
 	GPIO.setmode(GPIO.BCM)
 	for pump_number, pin_number in settings['assignments'].items():
-		GPIO.setup(pin_number, GPIO.OUT, initial=1)
+		GPIO.setup(pin_number, GPIO.OUT, initial=0)
 		#DEBUGprint('Pin number ' + str(pin_number) + ' initialized as output for ' + pump_number + '.  Set to 1. ')
 
 def ActivatePump(ingredient_name):
@@ -218,7 +218,7 @@ def ActivatePump(ingredient_name):
 	for pump_number, ingredient in settings['inventory'].items():
 		if (ingredient == ingredient_name):
 			#DEBUGprint(pump_number + " Pump Activated. Dispensing " + ingredient)
-			GPIO.output(settings['assignments'][pump_number], 0) # Turn on Relay
+			GPIO.output(settings['assignments'][pump_number], 1) # Turn on Relay
 
 def DeActivatePump(ingredient_name):
 	settings = ReadSettings()
@@ -226,7 +226,7 @@ def DeActivatePump(ingredient_name):
 	for pump_number, ingredient in settings['inventory'].items():
 		if (ingredient == ingredient_name):
 			#DEBUGprint(pump_number + " Pump De-Activated. Stopped dispensing " + ingredient)
-			GPIO.output(settings['assignments'][pump_number], 1) # Turn on Relay
+			GPIO.output(settings['assignments'][pump_number], 0) # Turn on Relay
 
 def CleanPump(pump_selected):
 	settings = ReadSettings()

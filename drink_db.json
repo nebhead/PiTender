@@ -117,11 +117,19 @@
       }
     },
     "tequila_shooter": {
-      "name:": "The Tequila Shooter",
-      "description": "All your hangovers all belong to us. ",
+      "name": "Tequila Shooter",
+      "description": "All your hangovers are belong to us.",
       "image": "img/default.jpg",
       "ingredients": {
         "tequila": 75
+      }
+    },
+    "whiskey_shot": {
+      "name": "Straight Whiskey",
+      "description": "On the rocks?  Better get some rocks.",
+      "image": "img/default.jpg",
+      "ingredients": {
+        "whiskey": 75
       }
     }
   }
