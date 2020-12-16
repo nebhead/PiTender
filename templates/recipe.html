@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %} Recipe Builder {% endblock %}
+
+{% block content %} 
+<!-- Main Body Container -->
+<div class="container">
+
+    <!-- Ingredients Card -->
+    <br>
+    <div class="card shadow">
+        <div class="card-header bg-info"><i class="fas fa-wine-bottle"></i>&nbsp; Ingredients List</div>
+        <div class="card-body">
+            <table class="table">
+                <thead class="thead-light">
+                <tr>
+                    <th class="w-40">Ingredient ID</th>
+                    <th class="w-40">Display Name</th>
+                    <th class="w-10">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="ing_table">
+                {% for id, displayname in drink_db['ingredients'].items()|sort %}
+                <tr id="ing_row_ID_{{ id }}">
+                    <td>
+                        {{ id }}
+                    </td>
+                    <td>
+                        {{ displayname }}
+                    </td>
+                    <td>
+                        <button type="button" class="btn text-warning ingrEditButton" ing_id="{{ id }}" data-toggle="tooltip" title="Edit Row"><i class="far fa-edit"></i></button>
+                        <button type="button" class="btn text-danger ingrDelButton" ing_id="{{ id }}" data-toggle="tooltip" title="Delete Row"><i class="far fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr id="ing_row_add">
+                    <td>
+                        <input type="text" class="form-control" id="add_id" name="new_id" placeholder="add ingredient id">
+                    </td>
+                    <td>
+                        <input type="text" class="form-control" id="add_dn" name="new_dn" placeholder="add ingredient display name">
+                    </td>
+                    <td>
+                        <button type="button" class="btn text-success ingrAddButton" data-toggle="tooltip" title="Add Row"><i class="far fa-plus-square"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- End Ingredients Card -->
+
+    <!-- Edit Recipes Card -->
+    <br>
+    
+    <div class="card shadow">
+        <div class="card-header bg-info"><i class="far fa-edit"></i>&nbsp; Add / Edit Drink Recipes</div>
+        <div class="card-body">
+            <div class="form-group">
+                <select class="form-control" name="select_drink" id="select_drink">
+                    <option value="none">Pick a Drink Recipe</option>
+                    <option value="add">(+) Add a Drink Recipe</option>
+                    {% for drink, object in drink_db['drinks'].items()|sort %}
+                    <option value="{{ drink }}">--> {{ object['name'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Magic happens here -->
+            <div id="edit_drink_card"></div>
+        </div>
+    </div>
+    <!-- End Edit Recipes Card -->
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+        <script src="{{ url_for('static', filename='js/ing_crud.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/drink_crud.js') }}"></script>
+{% endblock %}

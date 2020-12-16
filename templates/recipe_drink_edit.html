@@ -1,0 +1,208 @@
+<div class="card shadow">
+    <div class="card-header bg-warning">
+        <i class="far fa-edit"></i>&nbsp; {{ drink_db['drinks'][drink_id]['name'] }}
+    </div>
+    
+    <div class="card-body">
+        <div class="row">
+            <div class="col-sm-8">
+                
+                <!-- Drink ID -->
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">ID</span>
+                    </div>
+                    <input type="text" class="form-control" id="new_drink_id" value="{{ drink_id }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-success drinkIDButton" type="button" drink_id="{{ drink_id }}" data-toggle="tooltip" title="Save Changes"><i class="far fa-save"></i></button>
+                    </div>
+                </div>
+                
+                <!-- Display Name -->
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">Display Name</span>
+                    </div>
+                    <input type="text" class="form-control" id="new_drink_dn" value="{{ drink_db['drinks'][drink_id]['name'] }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-success drinkDNButton" type="button" drink_id="{{ drink_id }}" data-toggle="tooltip" title="Save Changes"><i class="far fa-save"></i></button>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">Description</span>
+                    </div>
+                    <input type="text" class="form-control" id="new_drink_desc" value="{{ drink_db['drinks'][drink_id]['description'] }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-success drinkDescButton" type="button" drink_id="{{ drink_id }}" data-toggle="tooltip" title="Save Changes"><i class="far fa-save"></i></button>
+                    </div>
+                </div>
+
+                <!-- Ingredient Table -->
+                <table class="table">
+                    <thead class="thead-light">
+                    <tr>
+                        <th class="w-80">Ingredient</th>
+                        <th class="w-10">Pump Time (seconds)</th>
+                        <th class="w-10">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="drink_ing_table">
+                    {% for ingredient, pumptime in drink_db['drinks'][drink_id]['ingredients'].items()|sort %}
+                    <tr id="drink_ing_ID_{{ ingredient }}">
+                        <td>
+                            {{ drink_db['ingredients'][ingredient] }}
+                        </td>
+                        <td>
+                            {{ pumptime }}
+                        </td>
+                        <td>
+                            <button type="button" class="btn text-warning drinkIngEditButton" ing_id="{{ ingredient }}" drink_id="{{ drink_id }}" data-toggle="tooltip" title="Edit Row"><i class="far fa-edit"></i></button>
+                            <button type="button" class="btn text-danger drinkIngDelButton" ing_id="{{ ingredient }}" drink_id="{{ drink_id }}" data-toggle="tooltip" title="Delete Row"><i class="far fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr id="drink_ing_ADD">
+                        <td>
+                            <div class="form-group">
+                                <select class="form-control" id="drink_ing_id_ADD">
+                                    <option>Add an Ingredient</option>
+                                    {% for id, displayname in drink_db['ingredients'].items()|sort %}
+                                        {% if id in drink_db['drinks'][drink_id]['ingredients'] %}
+                                            <!-- Skipped {{ id }} since it is used in this recipe already -->
+                                        {% else %}
+                                            <option value="{{ id }}">{{ displayname }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="number" min="0" max="300" step="5" class="form-control" id="new_drink_ing_pumptime" value="50">
+                        </td>
+                        <td>
+                            <button type="button" class="btn text-success drinkIngAddButton" drink_id="{{ drink_id }}"  data-toggle="tooltip" title="Add Row"><i class="far fa-plus-square"></i></button>
+                        </td>
+                    </tr>
+                    </tbody>
+                    </table>
+            </div>
+
+            <!-- Drink Image -->
+            <div class="col-sm-4 text-center">
+                <img class="img-thumbnail shadow" width="200" id="drink_image" src="{{ url_for('static', filename=drink_db['drinks'][drink_id]['image']) }}" alt="{{ drink_db['drinks'][drink_id]['image'] }}">
+                <br><br>
+                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#modal_drink_imgbrowse" data-toggle="tooltip" title="Browse Images"><i class="far fa-folder-open"></i></button>&nbsp;
+                <button type="submit" class="btn btn-success drinkImgUpload" drink_id="{{ drink_id }}"  data-toggle="tooltip" title="Upload File (disabled)" disabled><i class="fas fa-file-upload"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Footer - Delete Drink -->
+    <div class="card-footer">
+        <!--<button type="button" class="btn btn-success" id="drink_save" name="drink_save" drink_id="{{ drink_id }}">Save Recipe</button>&nbsp;-->
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#modal_drink_del">Delete Recipe</button>&nbsp;
+    </div>
+</div>
+
+<!-- Modal Section -->
+
+<div class="modal" id="modal_drink_del">
+    <div class="modal-dialog">
+      <div class="modal-content">
+  
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">Delete {{ drink_db['drinks'][drink_id]['name'] }}</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+  
+        <!-- Modal body -->
+        <div class="modal-body">
+          Do you really want to delete {{ drink_db['drinks'][drink_id]['name'] }}?
+        </div>
+  
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success" data-dismiss="modal">Close</button>&nbsp;
+          <button type="button" class="btn btn-danger drinkDelButton" data-dismiss="modal" drink_id="{{ drink_id }}">Yes, I'm Sure.</button>
+        </div>
+  
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal" id="modal_drink_imgbrowse">
+    <div class="modal-dialog">
+      <div class="modal-content">
+  
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">Choose Image for {{ drink_db['drinks'][drink_id]['name'] }}</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+  
+        <!-- Modal body -->
+        <div class="modal-body">
+          
+            <div id="drink_image_carousel" class="carousel slide" data-ride="carousel">
+
+                <!-- Indicators -->
+                <ul class="carousel-indicators">
+                    {% for index in range(num_imgs) %}
+                        {% if index == 0 %}
+                            <li data-target="#drink_image_carousel" data-slide-to="0" class="active"></li>
+                        {% else %}
+                            <li data-target="#drink_image_carousel" data-slide-to="{{ index + 1 }}"></li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+
+                <!-- The slideshow -->
+                <div class="carousel-inner bg-dark">
+
+                    <div class="carousel-item text-center active">
+                        <img src="{{ url_for('static', filename='img/drinks/default.jpg') }}" alt="img/drinks/default.jpg">
+                        <div class="carousel-caption text-primary">
+                          <button type="button" class="btn btn-info drinkImgBrowse" data-dismiss="modal" drink_id="{{ drink_id }}" image_id="img/drinks/default.jpg">Select Image</button>        
+                          <p>img/drinks/default.jpg</p>
+                        </div>
+                    </div>
+    
+                    {% for imagefilename in img_list|sort %}
+                    {% if imagefilename != 'img/drinks/default.jpg' %}
+                    <div class="carousel-item text-center">
+                    <img src="{{ url_for('static', filename=imagefilename ) }}" alt="{{ imagefilename }}">
+                        <div class="carousel-caption text-primary">
+                            <button type="button" class="btn btn-info drinkImgBrowse" data-dismiss="modal" drink_id="{{ drink_id }}" image_id="{{ imagefilename }}">Select Image</button>        
+                            <p>{{ imagefilename }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                
+                </div>
+              
+                <!-- Left and right controls -->
+                <a class="carousel-control-prev text-danger" href="#drink_image_carousel" data-slide="prev">
+                  <span class="carousel-control-prev-icon"></span>
+                </a>
+                <a class="carousel-control-next text-danger" href="#drink_image_carousel" data-slide="next">
+                  <span class="carousel-control-next-icon"></span>
+                </a>
+              
+            </div>
+
+        </div>
+  
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success" data-dismiss="modal">Close</button>&nbsp;
+        </div>
+  
+      </div>
+    </div>
+  </div>
+

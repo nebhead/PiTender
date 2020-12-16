@@ -67,8 +67,8 @@ echo "**                                                                     **"
 echo "**      Installing Dependancies... (This could take several minutes)   **"
 echo "**                                                                     **"
 echo "*************************************************************************"
-$SUDO apt install python-pip nginx git gunicorn supervisor -y
-$SUDO pip install flask
+$SUDO apt install python3-dev python3-pip python3-rpi.gpio nginx git gunicorn3 supervisor -y
+$SUDO pip3 install flask
 
 # Grab project files
 clear
@@ -134,6 +134,6 @@ fi
 $SUDO service supervisor start
 
 # Rebooting
-whiptail --msgbox --backtitle "Install Complete / Reboot Required" --title "Installation Completed - Rebooting" "Congratulations, the installation is complete.  At this time, we will perform a reboot and your application should be ready.  You should be able to access your application by opening a browser on your PC or other device and using the IP address for this Pi.  Enjoy!  Note: LIRC support requires extra configuration - see readme.md." ${r} ${c}
+whiptail --msgbox --backtitle "Install Complete / Reboot Required" --title "Installation Completed - Rebooting" "Congratulations, the installation is complete.  At this time, we will perform a reboot and your application should be ready.  You should be able to access your application by opening a browser on your PC or other device and using the IP address for this Pi.  Enjoy!" ${r} ${c}
 clear
 $SUDO reboot

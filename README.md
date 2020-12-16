@@ -1,7 +1,7 @@
-# PiTender
+# ![Icon](static/img/launcher-icon-1x.png) PiTender
 
-## Raspberry Pi based Automatic Bartender using Python and Flask/Gunicorn/nginx
-##### Also uses Bootstrap 4 (http://getbootstrap.com/) w/jQuery and Popper support
+### Raspberry Pi based Automatic Bartender using Python and Flask/Gunicorn/nginx
+##### Also uses Bootstrap 4 (http://getbootstrap.com/) w/jQuery
 
 ***Note:*** *This project is continuously evolving, and thus this readme will likely be improved over time, as I find the inspiration to make adjustments.  That being said, I'm sure there will be many errors that I have overlooked or sections that I haven't updated.*
 
@@ -11,16 +11,35 @@ This version of the bartender script is a complete re-write using a flask web in
 
 I'm using Gunicorn and nginx to proxy web requests.  This is simple enough to configure and setup, however I had to redesign the application without the threading libraries, due to conflicts with Gunicorn.  Instead, I am using two processes running concurrently (control.py and app.py).  Control handles all of the RasPi GPIO interfaces, while App handles the web routes.  They communicate through a series of json files.  
 
+## Update 2020/12
+
+Happy Holidays!  Well, it's time for a little bit of an overhaul of this project.  Here are some of the changes that are part of this update:
+* Using Python 3.x in this version, given that python 2.x is being depricated in the future
+* Redesign of the hardware interface in control.py using loadable modules such that you can swap out different SBCs, or test on a PC
+* Redesign of the web UI to use Flask extending base templates
+* Added a Recipe Builder to the web UI so that you can add ingredients and create new recipes/drinks from those ingredients 
+* Added some new drink images and moved to `/static/img/drinks/` (note that if you want to add new images, you can simply put them here)
+
+**Note:** This project hasn't been fully tested on real working hardware and your mileage may vary.  Please do submit issues here if you find any and I will try to get to it when I can.  
+
 ## Screenshots
 
 Here is a screenshot of the dashboard:
 
-![Dashboard](documents/photos/screenshot_dashboard.jpg)
+![Dashboard](documents/photos/screenshot_dashboard.png)
+
+Screenshot of the PiTender working: 
+
+![Working](documents/photos/screenshot_working.png)
+
+Here is a screenshot of the recipe builder:
+![Recipe Builder](documents/photos/screenshot_recipe_drink.png)
+
+Screenshot of the ingredients editor: 
+![Recipe Builder](documents/photos/screenshot_recipe_ing.png)
 
 Here is a screenshot of the settings screen:
-
-![Settings](documents/photos/screenshot_settings.jpg)
-![Admin](documents/photos/screenshot_admin.jpg)
+![Settings](documents/photos/screenshot_admin_inventory.png)
 
 ## Hardware Configuration
 
@@ -39,21 +58,24 @@ The parts list and setup of this was heavily borrowed from the following guide h
 
 ### Hardware Setup
 
-Schematic TBD
-![HW001](documents/photos/schematic.jpg)
+Below is the schematic borrowed from the [Hackster.io](https://www.hackster.io/hackershack/smart-bartender-5c430e) site.  This is the same basic design that we will be using for the PiTender project, however the display, the LED strip and the buttons are removed from this design.  
+
+Instead of these, we will use a Web based user interface that can be used via a local display (attached to the Raspberry Pi), a tablet, smartphone or PC with a web browser.  
+
+![Schematic](documents/photos/schematic.png)
 
 ### Raspberry Pi GPIO Mapping
 
 __Relay Control (defined in settings.json):__
 * **GPIOx Relays (1-8)** - Controls pump_01 - pump_08
 
-Can be configured from the WebUI (Settings Screen)
+Should be configured from the WebUI (Settings Screen).  You can easily select what pumps are connected to GPIO pins, thus there isn't really a need to lock down specific GPIO's for the project.  Use what is most convenient for you, or follow the Hackster.io implementation. 
 
 ## Software Installation
 
 ### Raspberry Pi Zero Setup Headless (*from raspberrypi.org*)
 
-Once you've burned/etched the Raspbian Stretch Lite image onto the microSD card, connect the card to your working PC and you'll see the card being mounted as "boot". Inside this "boot" directory, you need to make 2 new files. You can create the files using Atom code editor.
+Once you've burned/etched the Raspberry Pi OS image onto the microSD card, connect the card to your working PC and you'll see the card being mounted as "boot". Inside this "boot" directory, you need to make 2 new files. You can create the files using a text editor of your choice.
 
 + Step 1: Create an empty file. You can use Notepad on Windows or TextEdit to do so by creating a new file. Just name the file **ssh**. Save that empty file and dump it into boot partition (microSD).
 
@@ -82,9 +104,9 @@ sudo raspi-config
 + Set timezone
 + Replace Hostname with a unique hostname ('i.e. pitender')
 
-### Automatic Software Installation (ALPHA)
+### Automatic Software Installation (Recommended)
 
-I've created a script to install this automatically, but it is in ALPHA testing.  Your mileage may vary, and it's still recommended to try the below Manual Install.
+I've created a script to install PiTender automatically.  If you run into any issues, you can simply retry in the installation or try the manual steps below.
 
 After you've done the above steps to configure your raspberry pi, at the command line type the following:
 
@@ -96,12 +118,14 @@ OR if that doesn't seem to work for you, try:
 
 ```
 wget https://raw.githubusercontent.com/nebhead/pitender/master/auto-install/install.sh
-./install.sh
+sh install.sh
 ```
 
 Follow the onscreen prompts to complete the installation.  At the end of the script it will reboot, so just be aware of this.  
 
-### Manual Software Installation (Recommended)
+### Manual Software Installation
+
+If the auto-install script fails or if you just want to have more control over the installation process, you can follow the following steps.  
 
 Install dependencies.  
 
@@ -109,8 +133,8 @@ Install dependencies.
 ```
 sudo apt update
 sudo apt upgrade
-sudo apt install python-pip nginx git gunicorn supervisor -y
-sudo pip install flask
+sudo apt install python3-dev python3-pip python3-rpi.gpio nginx git gunicorn3 supervisor -y
+sudo pip3 install flask
 
 git clone https://github.com/nebhead/pitender
 ```
@@ -173,17 +197,27 @@ Simply navigate to the IP address of your device for example (you can usually fi
 
 **Note:** It's highly recommended to set a static IP for your Pi in your router's configuration.  This will vary from manufacturer to manufacturer and is not covered in this guide.  A static IP ensures that you will be able to access your device reliably, without having to check your router for a new IP every so often.   
 
-The interface / webui is broken out into two main pages. The first is the dashboard view where you can select your drinks. Scroll through options moving left to right.  Once you've made your selection, tap the "Make Drink" button.
+The interface / webui is broken out into three main pages. The first is the dashboard view where you can select your drinks that you want to dispense. Scroll through options moving left to right.  Once you've made your selection, tap the "Make Drink" button.  
 
-![Dashboard](documents/photos/screenshot_dashboard.jpg)
+**NOTE:** PiTender is smart enough to know what ingredients you have attached and **_only displays the drinks that are possible with those ingredients._**  The drink_db is expandable, but you are really only limited by what ingredients are attached to your pumps.    
+
+![Dashboard](documents/photos/screenshot_dashboard.png)
 
 Pressing the hamburger icon in the upper right of the interface, allows you to also access to the administration/settings screen. This interface allows you to configure the pump GPIO assignments and the different drinks attached to each pump.  
 
-![Admin & Settings](documents/photos/screenshot_settings.jpg)
+![Admin & Settings](documents/photos/screenshot_admin_inventory.png)
 
 Scrolling down further gives you the option to reboot the system or shutdown the system.  Below these controls, you'll see more information about the system hardware, and the uptime.  
 
-![Admin & Settings](documents/photos/screenshot_admin.jpg)
+![Admin & Settings](documents/photos/screenshot_admin_cleaning.png)
+
+Lastly, there is a Recipe Builder that gives you the ability to add more ingredients and drinks to the database.  The ingredient table provides the option to edit existing ingredients (either the unique ingredient ID or the display name for each ingredient).  **NOTE:** Ingredient IDs must only contain lowercase and alphanumeric characters.  No spaces, or special characters are allowed.  PiTender will attempt to fixup the IDs if you entered something incorrectly.   
+
+![Admin & Settings](documents/photos/screenshot_recipe_ing.png)
+
+You can also Edit or Add your recipes on this page by selecting either Add or Edit an existing recipe.  Most of this is pretty self explanitory. Each field has a save button so that you can save changes to the recipe directly.  When adding a new recipe, don't forget to create a unique recipe ID.  Similar to the ingredients, this ID must be a lowercase, alphanumeric word without spaces or special characters.  PiTender will try to fix this up if you don't enter this in correctly.  
+
+![Admin & Settings](documents/photos/screenshot_recipe_drink.png)
 
 ### A Note on Cleaning
 After you use the bartender, you'll want to flush out the pump tubes in order to avoid bacteria growth. There is an easy way to do this in the settings menu. Hook all the tubes up to a water source, then navigate to Settings->Cleaning, select the pump to clean or clean all pumps, then touch Start Cleaning. All pumps will turn on to flush the existing liquid from the tubes. It is recommended to take the tubes out of the water source halfway through to remove all liquid from the pumps. Note: make sure you have a glass under the funnel to catch the flushed out liquid.
@@ -194,11 +228,16 @@ If you are an Android person, you are likely to be using Chrome on your phone an
 
 First, navigate to the instance of the application in your Chrome browser on your phone.  Remember, it's as easy as going to the IP address that was assigned to you device.  Then, from the Chrome drop-down menu in the upper right of the screen, select "Add to Home screen".  
 
-![Add to Home screen in Chrome](documents/photos/Screenshot_Chrome01.jpg)
+![Add to Home screen in Chrome](documents/photos/screenshot_chrome_01.jpg)
+
 
 Then, when the new dialog box pops up, you will have the opportunity to rename the application, or keep the default.
 
-![Rename the application](documents/photos/Screenshot_Chrome02.jpg)
+![Rename the application](documents/photos/screenshot_chrome_02.jpg)
+
+Approve the shortcut icon.
+
+![Approve Shortcut](documents/photos/screenshot_chrome_03.jpg)
 
 And there you have it, you've not only created a quick link to your web-app, but you've also created a pseudo application at the same time.
 

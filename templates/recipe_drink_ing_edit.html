@@ -1,0 +1,10 @@
+<td>
+    {{ ingdisplayname }}
+</td>
+<td>
+    <input type="number" min="0" max="300" step="5" class="form-control" id="pumptime_{{ ing_id }}" value="{{ pumptime }}">
+</td>
+<td>
+    <button type="button" class="btn text-success drinkIngSaveButton" ing_id="{{ ing_id }}" drink_id="{{ drink_id }}" data-toggle="tooltip" title="Save Changes"><i class="far fa-save"></i></button>
+    <button type="button" class="btn text-danger drinkIngDelButton" ing_id="{{ ing_id }}" drink_id="{{ drink_id }}" data-toggle="tooltip" title="Delete Row"><i class="far fa-trash-alt"></i></button>
+</td>

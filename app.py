@@ -1,14 +1,48 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 # PiTender Flask/Python script
 
-from flask import Flask, request, render_template, make_response
+from flask import Flask, flash, url_for, request, render_template, make_response, redirect
 import time
 import os
 import json
 import datetime
+from common import *
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = 'static/img/drinks'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def fixup_string(broken):
+	fixed = ''.join(e for e in broken if e.isalnum())
+	fixed = fixed.lower()
+	return(fixed)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/uploadfile', methods=['GET', 'POST'])
+def upload_file():
+	if request.method == 'POST':
+		# check if the post request has the file part
+		if 'file' not in request.files:
+			return redirect('/recipe')
+		else:
+			file = request.files['file']
+			# If the user does not select a file, the browser submits an
+			# empty file without a filename.
+			if file.filename == '':
+				#flash('No selected file')
+				return redirect('/recipe')
+			if file and allowed_file(file.filename):
+				filename = secure_filename(file.filename)
+				file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+				return redirect('/recipe')
+	return redirect('/recipe')
 
 @app.route('/', methods=['POST','GET'])
 def index():
@@ -61,20 +95,17 @@ def index():
 		num_drinks = 1
 		errorcode = 1
 
-	print (drinklist)
-
 	return render_template('index.html', drinklist=drinklist, num_drinks=num_drinks, errorcode=errorcode)
 
 @app.route('/work/<action>', methods=['POST','GET'])
 @app.route('/work', methods=['POST','GET'])
 def do_work(action=None):
-
 	status = ReadStatus()
 	drink_db = ReadDrinkDB()
 
 	if (action == "cancel"):
 		status['control']['stop'] = 1
-		print ('Cancel Requested, stop = ' + str(status['control']['stop']) )
+		#print ('Cancel Requested, stop = ' + str(status['control']['stop']) )
 		WriteStatus(status)
 		return render_template('work.html', action=action)
 
@@ -82,7 +113,6 @@ def do_work(action=None):
 		response = request.form
 		if(response['makedrink'] in drink_db.get('drinks', {})):
 			drink_name = response['makedrink']
-			#DEBUGprint (drink_name)
 			status['status']['active'] = 0
 			status['status']['progress'] = 0
 			status['control']['start'] = 1
@@ -93,8 +123,7 @@ def do_work(action=None):
 			WriteStatus(status)
 			return render_template('work.html', drink_name=drink_name)
 
-	return()
-
+	return redirect('/')
 
 @app.route('/data/<action>', methods=['POST','GET'])
 @app.route('/data', methods=['POST','GET'])
@@ -110,6 +139,180 @@ def data_dump(action=None):
 
 	return render_template('data.html', percent_done=percent_done, percent_done_text=percent_done_text, mode=mode)
 
+@app.route('/recipe/<action>', methods=['POST'])
+@app.route('/recipe', methods=['POST','GET'])
+def recipe(action=None):
+	drink_db = ReadDrinkDB()
+
+	UPLOAD_DIR = 'static/img/drinks'
+
+	if (request.method == 'POST'):
+		response = request.form
+		#print(response)
+		# Drink Recipe Edit Functions
+		if('drink_edit' in response):
+			if (response['drink_edit'] == 'true'):
+				#print('drink_edit')
+				# Get Selected Drink Recipe
+				drink_id = response['drink_id']
+				#print(drink_id)
+				# Build Image List
+				img_list = []
+				for root, dirs, files in os.walk(UPLOAD_DIR):
+					for file in files:
+						if file.endswith(".jpg") or file.endswith(".JPG") or file.endswith(".jpeg") or file.endswith(".JPEG") or file.endswith(".png"):
+							filename = (os.path.join(root, file)).replace('static/','')
+							
+							#print(filename)
+							img_list.append(filename)
+				#print(img_list)
+				num_imgs = len(img_list)
+				return render_template('recipe_drink_edit.html', drink_db=drink_db, drink_id=drink_id, img_list=img_list, num_imgs=num_imgs)
+		elif('drink_add' in response):
+			if (response['drink_add'] == 'true'):
+				#print('drink_add')
+				drink_id = 'enter_new_drink_id'
+				if (drink_id in drink_db['drinks']):
+					# If there was another record with the same name, delete it
+					drink_db['drinks'].pop(drink_id)
+				drink_db['drinks'][drink_id] = {}
+				drink_db['drinks'][drink_id]['name'] = 'DEFAULT Drink Name'  
+				drink_db['drinks'][drink_id]['description'] = 'Enter Description.'
+				drink_db['drinks'][drink_id]['image'] = 'img/drinks/default.jpg'
+				drink_db['drinks'][drink_id]['ingredients'] = {}
+				WriteDrinkDB(drink_db)
+				# Build Image List
+				img_list = []
+				for root, dirs, files in os.walk(UPLOAD_DIR):
+					for file in files:
+						if file.endswith(".jpg") or file.endswith(".JPG") or file.endswith(".jpeg") or file.endswith(".JPEG") or file.endswith(".png"):
+							filename = (os.path.join(root, file)).replace('static/','')
+							
+							#print(filename)
+							img_list.append(filename)
+				#print(img_list)
+				num_imgs = len(img_list)
+				return render_template('recipe_drink_edit.html', drink_db=drink_db, drink_id=drink_id, img_list=img_list, num_imgs=num_imgs)
+		elif('drink_del' in response):
+			if (response['drink_del'] == 'true'):
+				#print('drink_del')
+				drink_id = response['drink_id']
+				#print(drink_id)
+				drink_db['drinks'].pop(drink_id)
+				WriteDrinkDB(drink_db)
+				return ('{ "result" : "success" }')
+		elif('drink_edid' in response):
+			if (response['drink_edid'] == 'true'):
+				#print('drink_edid')
+				drink_id = response['drink_id']
+				new_drink_id = response['new_drink_id']
+				#print(drink_id)
+				if(new_drink_id.isalnum() != True): 
+					new_drink_id = fixup_string(new_drink_id)
+				drink_db['drinks'][new_drink_id] = drink_db['drinks'].pop(drink_id)
+				WriteDrinkDB(drink_db)
+				return render_template('recipe_drink_edit.html', drink_db=drink_db, drink_id=new_drink_id)
+		elif('drink_dn' in response):
+			if (response['drink_dn'] == 'true'):
+				#print('drink_dn')
+				drink_id = response['drink_id']
+				new_drink_dn = response['new_drink_dn']
+				#print(drink_id)
+				drink_db['drinks'][drink_id]['name'] = new_drink_dn
+				WriteDrinkDB(drink_db)
+				return ('{ "result" : "success" }')
+		elif('drink_desc' in response):
+			if (response['drink_desc'] == 'true'):
+				#print('drink_desc')
+				drink_id = response['drink_id']
+				new_drink_desc = response['new_drink_desc']
+				#print(drink_id)
+				drink_db['drinks'][drink_id]['description'] = new_drink_desc
+				WriteDrinkDB(drink_db)
+				return ('{ "result" : "success" }')
+		elif('drink_ing_edit' in response):
+			if (response['drink_ing_edit'] == 'true'):
+				#print('drink_ing_edit')
+				drink_id = response['drink_id']
+				ing_id = response['ing_id']
+				return render_template('recipe_drink_ing_edit.html', ingdisplayname=drink_db['ingredients'][ing_id], pumptime=drink_db['drinks'][drink_id]['ingredients'][ing_id], ing_id=ing_id, drink_id=drink_id)
+		elif('drink_ing_del' in response):
+			if (response['drink_ing_del'] == 'true'):
+				#print('drink_ing_del')
+				drink_id = response['drink_id']
+				ing_id = response['ing_id']
+				drink_db['drinks'][drink_id]['ingredients'].pop(ing_id)
+				WriteDrinkDB(drink_db)
+				return ('{ "result" : "success" }')
+		elif('drink_ing_save' in response):
+			if (response['drink_ing_save'] == 'true'):
+				#print('drink_ing_save')
+				drink_id = response['drink_id']
+				ing_id = response['ing_id']
+				new_pumptime = response['new_pumptime']
+				drink_db['drinks'][drink_id]['ingredients'][ing_id] = int(new_pumptime)
+				WriteDrinkDB(drink_db)
+				return render_template('recipe_drink_ing_saved.html', ing_dn=drink_db['ingredients'][ing_id], pumptime=new_pumptime, ing_id=ing_id, drink_id=drink_id)
+		elif('drink_ing_add' in response):
+			if (response['drink_ing_add'] == 'true'):
+				#print('drink_ing_add')
+				drink_id = response['drink_id']
+				new_ing_id = response['new_ing_id']
+				new_pumptime = response['new_pumptime']
+				if (new_ing_id in drink_db['ingredients']):
+					drink_db['drinks'][drink_id]['ingredients'][new_ing_id] = int(new_pumptime)
+					WriteDrinkDB(drink_db)
+				return render_template('recipe_drink_ing_saved.html', ing_dn=drink_db['ingredients'][new_ing_id], pumptime=new_pumptime, ing_id=new_ing_id, drink_id=drink_id)
+		elif('drink_ing_add_init' in response):
+			if (response['drink_ing_add_init'] == 'true'):
+				drink_id = response['drink_id']
+				return render_template('recipe_drink_ing_add.html', drink_id=drink_id, drink_db=drink_db)
+		elif('drink_img_sel' in response):
+			if (response['drink_img_sel'] == 'true'):
+				drink_id = response['drink_id']
+				imagefilename = response['image_id']
+				drink_db['drinks'][drink_id]['image'] = imagefilename
+				WriteDrinkDB(drink_db)
+
+		# Ingredient Edit Functions
+		elif('ing_edit' in response):
+			if (response['ing_edit'] == 'true'):
+				#print ('Edit Selected.')
+				id = response['ing_id']
+				return render_template('recipe_ing_edit.html', id=id, displayname=drink_db['ingredients'][id])
+		elif('ing_del' in response):
+			if (response['ing_del'] == 'true'):
+				#print ('Delete Selected.')
+				id = response['ing_id']
+				if(id in drink_db['ingredients']):
+					drink_db['ingredients'].pop(id)
+					WriteDrinkDB(drink_db)
+				return ('Deleting...')
+		elif('ing_save' in response):
+			if (response['ing_save'] == 'true'):
+				#print ('Save Selected.')
+				id = response['ing_id']
+				new_id = response['ing_new_id']
+				new_dn = response['ing_new_dn']
+				if new_dn != drink_db['ingredients'][id]:
+					drink_db['ingredients'][id] = new_dn
+				if new_id != id: 
+					if(new_id.isalnum() != True): 
+						new_id = fixup_string(new_id)
+					drink_db['ingredients'][new_id] = drink_db['ingredients'].pop(id)
+				WriteDrinkDB(drink_db)
+				return render_template('recipe_ing_save.html', old_id=id, id=new_id, displayname=new_dn)
+		elif('ing_add' in response):
+			if (response['ing_add'] == 'true'):
+				#print ('Add Selected.')
+				new_id = response['ing_new_id']
+				new_dn = response['ing_new_dn']
+				if(new_id.isalnum() != True): 
+					new_id = fixup_string(new_id)
+				drink_db['ingredients'][new_id] = new_dn
+				WriteDrinkDB(drink_db)
+				return render_template('recipe_ing_save.html', old_id='ing_row_add', id=new_id, displayname=new_dn)
+	return render_template('recipe.html', drink_db=drink_db, selected_drink='none')
 
 @app.route('/admin/<action>', methods=['POST','GET'])
 @app.route('/admin', methods=['POST','GET'])
@@ -157,10 +360,10 @@ def admin(action=None):
 		response = request.form
 		drink_name = 'clean'
 
-		print('Clean Requested.')
-		print(response['clean'])
+		#print('Clean Requested.')
+		#print(response['clean'])
 		if 'pump_42' in response['clean']:
-			print('Clean ALL pumps for 20 seconds.')
+			#print('Clean ALL pumps for 20 seconds.')
 			status['status']['active'] = 0
 			status['status']['progress'] = 0
 			status['control']['start'] = 0
@@ -173,7 +376,7 @@ def admin(action=None):
 		else:
 			for pump_number, pin_number in settings['assignments'].items():
 				if(pump_number in response['clean']):
-					print('Clean ' + pump_number + ' for 20 seconds.')
+					#print('Clean ' + pump_number + ' for 20 seconds.')
 					status['status']['active'] = 0
 					status['status']['progress'] = 0
 					status['control']['start'] = 0
@@ -214,132 +417,6 @@ def checkcputemp():
 	temp = os.popen('vcgencmd measure_temp').readline()
 	return temp.replace("temp=","")
 
-def ReadStatus():
-	# *****************************************
-	# Read State Values from File
-	# *****************************************
-	try:
-		json_data_file = open("status.json", "r")
-		json_data_string = json_data_file.read()
-		status = json.loads(json_data_string)
-		json_data_file.close()
-	except(IOError, OSError):
-		# Issue with reading states JSON, so create one/write new one
-
-		status = {}
-
-		status['status'] = {
-			"active": 0,
-			"progress": 0
-			}
-
-		status['control'] = {
-			"start": 0,
-			"pause": 0,
-			"stop": 0
-			}
-
-		WriteStatus(status)
-
-	return(status)
-
-def WriteStatus(status):
-	# *****************************************
-	# Write State Values to File
-	# *****************************************
-	json_data_string = json.dumps(status)
-	with open("status.json", 'w') as status_file:
-	    status_file.write(json_data_string)
-
-def ReadSettings():
-	# *****************************************
-	# Read Settings from File
-	# *****************************************
-
-	# Read all lines of settings.json into an list(array)
-	try:
-		json_data_file = open("settings.json", "r")
-		json_data_string = json_data_file.read()
-		settings = json.loads(json_data_string)
-		json_data_file.close()
-	except(IOError, OSError):
-		# Issue with reading states JSON, so create one/write new one
-
-		settings = {}
-
-		settings['inventory'] = {
-			"pump_01": "rum",
-			"pump_02": "vodka",
-			"pump_03": "whiskey",
-			"pump_04": "coke",
-			"pump_05": "oj",
-			"pump_06": "tequila",
-			"pump_07": "marg_mix",
-			"pump_08": "iced_tea"
-			}
-
-		settings['assignments'] = {
-			"pump_01": 17,
-			"pump_02": 27,
-			"pump_03": 22,
-			"pump_04": 23,
-			"pump_05": 24,
-			"pump_06": 25,
-			"pump_07": 0,
-			"pump_08": 0
-			}
-
-		WriteSettings(settings)
-
-	return(settings)
-
-def WriteSettings(settings):
-	# *****************************************
-	# Write all settings to JSON file
-	# *****************************************
-	json_data_string = json.dumps(settings)
-	with open("settings.json", 'w') as settings_file:
-	    settings_file.write(json_data_string)
-
-def ReadDrinkDB():
-	# *****************************************
-	# Read Settings from File
-	# *****************************************
-
-	# Read all lines of settings.json into an list(array)
-	try:
-		json_data_file = open("drink_db.json", "r")
-		json_data_string = json_data_file.read()
-		drink_db = json.loads(json_data_string)
-		json_data_file.close()
-	except(IOError, OSError):
-		# Issue with reading states JSON, so create one/write new one
-
-		drink_db = {}
-
-		drink_db['drinks'] = {
-			"empty": "Empty"
-			}
-
-		drink_db['ingredients'] = {
-			"empty": "Empty",
-			}
-
-	return(drink_db)
-
-def WriteLog(event):
-	# *****************************************
-	# Function: WriteLog
-	# Input: str event
-	# Description: Write event to event.log
-	#  Event should be a string.
-	# *****************************************
-	now = str(datetime.datetime.now())
-	now = now[0:19] # Truncate the microseconds
-
-	logfile = open("./logs/events.log", "a")
-	logfile.write(now + ' ' + event + '\n')
-	logfile.close()
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', debug=True) # Use this for Debug Mode
+	#app.run(host='0.0.0.0') # Use this for Production Mode

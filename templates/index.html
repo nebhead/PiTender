@@ -1,52 +1,15 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+{% extends 'base.html' %}
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-		<link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+{% block cssextend %}
+<link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
+{% endblock %}
 
-    <!-- Adding a Favicon -->
-    <link href="{{ url_for('static', filename='img/favicon.ico') }}" rel="icon" type="image/x-icon" />
+{% block title %} Drink Menu {% endblock %}
 
-    <!-- WebApp Manifest -->
-    <link rel="manifest" href="{{ url_for('manifest') }}">
-
-    <title>PiTender</title>
-
-  </head>
-	<body>
-
-		<!-- Navbar Header -->
-		<nav class="navbar sticky-top navbar-dark bg-dark">
-
-			<a class="navbar-brand" href="#">
-				<img src="{{ url_for('static', filename='img/launcher-icon-1x.png') }}" width="30" height="30" class="d-inline-block align-top" alt="">
-				PiTender</a>
-
-				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-			    <span class="navbar-toggler-icon"></span>
-			  </button>
-
-			  <div class="collapse navbar-collapse" id="navbarNav">
-			    <ul class="navbar-nav">
-			      <li class="nav-item active">
-			        <a class="nav-link" href="#">Main Menu<span class="sr-only">(current)</span></a>
-			      </li>
-			      <li class="nav-item">
-			        <a class="nav-link" href="/admin">Settings</a>
-			      </li>
-			    </ul>
-			  </div>
-
-		</nav>
-  	<br>
+{% block content %} 
 
   	<div class="container">
-				<div class="card">
+				<div class="card shadow">
 				  <div class="card-body">
 						<form name="input" action="/work" method="POST">
 
@@ -58,7 +21,7 @@
 											{% if index == 0 %}
 												<li data-target="#drinklist" data-slide-to="1" class="active"></li>
 											{% else %}
-								    		<li data-target="#drinklist" data-slide-to="{{ index + 1 }}"></li>
+								    			<li data-target="#drinklist" data-slide-to="{{ index + 1 }}"></li>
 											{% endif %}
 										{% endfor %}
 									</ul>
@@ -66,27 +29,27 @@
 							  <!-- The slideshow -->
 							  <div class="carousel-inner">
 
-                  <div class="carousel-item active">
-                    <img src="{{ url_for('static', filename='img/default.jpg') }}" alt="Welcome to PiTender">
-                    <div class="carousel-caption">
-                      <h3>Welcome to PiTender</h3>
-                      <p>Use the arrows to select a drink option.</p>
-                    </div>
-                  </div>
-
-									{% for drink_name, drink_data in drinklist.items()|sort %}
-
-										<div class="carousel-item">
-								      <img src="{{ url_for('static', filename=drink_data['image']) }}" alt="{{ drink_name }}">
-											<div class="carousel-caption">
-												<h3>{{ drink_data['name'] }}</h3>
-												<p>{{ drink_data['description'] }}</p>
-												<button type="submit" name="makedrink" value="{{ drink_name }}" class="btn btn-success btn-sm">Make It!</button>
-											</div>
-								    </div>
-
-									{% endfor %}
+								<div class="carousel-item active">
+									<img src="{{ url_for('static', filename='img/drinks/default.jpg') }}" alt="Welcome to PiTender">
+									<div class="carousel-caption">
+									<h3>Welcome to PiTender</h3>
+									<p>Use the arrows to select a drink option.</p>
+									</div>
 								</div>
+
+								{% for drink_name, drink_data in drinklist.items()|sort %}
+
+								<div class="carousel-item">
+									<img src="{{ url_for('static', filename=drink_data['image']) }}" alt="{{ drink_name }}">
+										<div class="carousel-caption">
+											<h3>{{ drink_data['name'] }}</h3>
+											<p>{{ drink_data['description'] }}</p>
+											<button type="submit" name="makedrink" value="{{ drink_name }}" class="btn btn-success btn-sm">Make It!</button>
+										</div>
+								</div>
+
+								{% endfor %}
+							</div>
 
 							  <!-- Left and right controls -->
 							  <a class="carousel-control-prev" href="#drinklist" data-slide="prev">
@@ -107,12 +70,4 @@
 				  </div>
 				</div>
   	</div> <!-- End Showcase -->
-
-	<!-- JavaScript -->
-	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
-	<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-
-</body>
-</html>
+	{% endblock %}

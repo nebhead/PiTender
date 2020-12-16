@@ -1,0 +1,20 @@
+    <td>
+        <div class="form-group">
+            <select class="form-control" id="drink_ing_id_ADD">
+                <option>Add an Ingredient</option>
+                {% for id, displayname in drink_db['ingredients'].items()|sort %}
+                    {% if id in drink_db['drinks'][drink_id]['ingredients'] %}
+                        <!-- Skipped {{ id }} since it is used in this recipe already -->
+                    {% else %}
+                        <option value="{{ id }}">{{ displayname }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+    </td>
+    <td>
+        <input type="number" min="0" max="300" step="5" class="form-control" id="new_drink_ing_pumptime" value="50">
+    </td>
+    <td>
+        <button type="button" class="btn text-success drinkIngAddButton" drink_id="{{ drink_id }}" data-toggle="tooltip" title="Add Row"><i class="far fa-plus-square"></i></button>
+    </td>
