@@ -418,5 +418,5 @@ def checkcputemp():
 	return temp.replace("temp=","")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True) # Use this for Debug Mode
-	#app.run(host='0.0.0.0') # Use this for Production Mode
+    #app.run(host='0.0.0.0', debug=True) # Use this for Debug Mode
+	app.run(host='0.0.0.0') # Use this for Production Mode
