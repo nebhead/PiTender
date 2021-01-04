@@ -16,33 +16,29 @@
 import RPi.GPIO as GPIO
 
 class PumpControl:
-
 	def __init__(self, settings):
+		# Init GPIO's to default values / behavior
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
-
-		# Init GPIO's to default values / behavior
+		self.pump_pins = {}
 		for pump_number, pin_number in settings['assignments'].items():
-			GPIO.setup(pin_number, GPIO.OUT, initial=0)
-			print('Pin number ' + str(pin_number) + ' initialized as output for ' + pump_number + '.  Set to 1. ')
+			GPIO.setup(pin_number, GPIO.OUT, initial=1)
+			self.pump_pins[pump_number] = pin_number
+			print(f"Pin number {pin_number} initialized as output for {pump_number}.  Set to 1. ")
 
-	def ActivatePump(self, ingredient_name, settings):
-		for pump_number, ingredient in settings['inventory'].items():
-			if (ingredient == ingredient_name):
-				print(pump_number + " Pump Activated. Dispensing " + ingredient)
-				GPIO.output(settings['assignments'][pump_number], 1) # Turn on Relay
+	def ActivatePump(self, pump_number):
+		GPIO.output(self.pump_pins[pump_number], 0) # Turn on Relay
+		print(f"{pump_number} Pump Activated. Dispensing on pin: {self.pump_pins[pump_number]}")
 
-	def DeActivatePump(self, ingredient_name, settings):
-		for pump_number, ingredient in settings['inventory'].items():
-			if (ingredient == ingredient_name):
-				print(pump_number + " Pump De-Activated. Stopped Dispensing " + ingredient)
-				GPIO.output(settings['assignments'][pump_number], 0) # Turn off Relay
+	def DeActivatePump(self, pump_number):
+		GPIO.output(self.pump_pins[pump_number], 1) # Turn off Relay
+		print(f"{pump_number} Pump De-Activated. Stopped Dispensing on pin: {self.pump_pins[pump_number]}")
 
-	def GetOutputStatus(self, settings):
+	def GetOutputStatus(self):
 		self.current = {}
-		for pump_number, pin_number in settings['assignments'].items():
-			self.current[pump_number] = GPIO.input(pin_number)
+		for pump_number in self.pump_pins.items():
+			self.current[pump_number] = GPIO.input(self.pump_pins[pump_number])
 		return self.current
 
-	def Cleanup():
+	def Cleanup(self):
 		GPIO.cleanup()
