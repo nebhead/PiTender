@@ -350,6 +350,10 @@ def admin(action=None):
 						duplicated_pin.append(pin_number)
 						errormessage.append('Pin ' + str(pin_number) + ' is assigned to more than one pump. ')
 
+		if ('flow_rate' in response):
+			print(response['flow_rate'])
+			settings['flowrate'] = int(response['flow_rate'])
+
 		if (errorcode > 0):
 			settings = ReadSettings()
 			errormessage.append('Settings NOT saved. Please check your settings and try again. ')

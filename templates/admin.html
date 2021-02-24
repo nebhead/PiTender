@@ -19,7 +19,7 @@
         </div>
       {% endif %}
       <br>
-      <!-- Settings Card -->
+      <!-- Inventory Card -->
       <form name="input" action="/admin/settings" method="POST">
         <div class="card">
   				<div class="card-header">
@@ -78,6 +78,28 @@
         </div>
       </form>
       <br>
+
+	<!-- Pump Settings Card -->
+	<form name="input" action="/admin/settings" method="POST">
+		<div class="card">
+			<div class="card-header">
+						Pump Settings
+			</div>
+			<div class="card-body">
+		
+		<span class="badge badge-warning">INFO:</span><i class="small"> Adjust the average flow rate of the pumps where the value 'n' input below will be used to adjust the flow through the following calculation (n/100) * (ml) of liquid to dispense.</i>
+		<div class="input-group mb-3">
+			<div class="input-group-prepend">
+				<span class="input-group-text" data-toggle="tooltip" title="Flow Rate: Adjust flow rate for the pumps installed. [Value = 1-100]"><i class="fas fa-wind"></i>&nbsp; Flow Rate[x/100]:</span>
+			</div>
+			<input id="flow_rate" type="number" min="1" max = "100" class="form-control" name="flow_rate" value="{{ settings['flowrate'] }}">
+		</div>
+
+		<button type="submit" class="btn btn-primary btn-sm">Save Settings</button>
+	</div>
+	</div>
+	</form>
+	<br>
 			<!-- Clean Function Card -->
 			<form name="input" action="/admin/clean" method="POST">
         <div class="card">

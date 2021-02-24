@@ -11,8 +11,8 @@
 # *****************************************
 
 # Set this to False on Raspberry Pi Host ()
-prototype_mode = False
-#prototype_mode = True # Comment out this line to disable TEST / Prototype mode
+prototype_mode = True 
+prototype_mode = False # Comment out this line to enable prototype mode
 
 # *****************************************
 # Imported Libraries
@@ -53,9 +53,12 @@ def PourDrink(drink_name):
 		settings = ReadSettings()
 		platform = PumpControl(settings)
 
+		print(f'Starting to prepare {drink_name}')
 		# Cycle through each ingredient in the drink recipe to get the total runtime
 		for drink_ingredient, pump_runtime in drink_db['drinks'][drink_name]['ingredients'].items():
-			total_runtime = total_runtime + int(pump_runtime)
+			total_runtime = total_runtime + int(pump_runtime * (settings['flowrate'] / 100))
+
+		print(f'Total Runtime: {total_runtime}')
 
 		# Cycle through each ingredient and dispense the beverage
 		for drink_ingredient, pump_runtime in drink_db['drinks'][drink_name]['ingredients'].items():
@@ -66,20 +69,22 @@ def PourDrink(drink_name):
 						pump_number = index
 						print(f'Pump number = {index}')
 				platform.ActivatePump(pump_number)
-				for x in range(int(pump_runtime/5)):
-					current_count += 5
+				calculated_pump_runtime = max(1, int((pump_runtime * (settings['flowrate'] / 100)))) 
+				print(f'Calculated Pump Runtime for {drink_ingredient} = {calculated_pump_runtime}')
+				for x in range(calculated_pump_runtime):
+					current_count += 1
 					status = ReadStatus()
 					if (status['control']['stop'] == 0):
 						percent_progress = int((current_count / total_runtime) * 100)
 						status['status']['progress'] = percent_progress
 						WriteStatus(status)
-						time.sleep(5)
+						time.sleep(1)
 					else:
 						break
 				platform.DeActivatePump(pump_number)
 			else:
 				break
-
+		print('Finished. Cleaning up status file.')
 		status['status']['active'] = 0
 		status['control']['start'] = 0
 		status['control']['stop'] = 0

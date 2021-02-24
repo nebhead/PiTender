@@ -82,6 +82,8 @@ def ReadSettings():
 			"pump_08": 0
 			}
 
+		settings['flowrate'] = 85
+
 		WriteSettings(settings)
 
 	return(settings)
