@@ -128,25 +128,9 @@ def CleanPump(pump_selected):
 	WriteStatus(status)
 
 	# Initialize Platform Object
-	settings = ReadSettings()
 	platform = PumpControl(settings)
 
-	if pump_selected > 0 and pump_selected < 9:
-		pump_string = 'pump_0' + str(pump_selected)
-		for pump_number, pin_number in settings['assignments'].items():
-			if (pump_string == pump_number):
-				platform.ActivatePump(pump_number)
-				for index in range(21):
-					status = ReadStatus()
-					if (status['control']['stop'] == 0):
-						status['status']['progress'] = index*5
-						WriteStatus(status)
-						time.sleep(1) # Run for X seconds
-					else:
-						break
-				platform.DeActivatePump(pump_number)
-
-	elif pump_selected == 42:
+	if pump_selected == "all":
 		total_runtime = 0
 		progress = 0
 
@@ -168,10 +152,24 @@ def CleanPump(pump_selected):
 					else:
 						break
 				platform.DeActivatePump(pump_number)
+	else:
+		for pump_number, pin_number in settings['assignments'].items():
+			if (pump_selected == pump_number):
+				platform.ActivatePump(pump_number)
+				for index in range(21):
+					status = ReadStatus()
+					if (status['control']['stop'] == 0):
+						status['status']['progress'] = index*5
+						WriteStatus(status)
+						time.sleep(1) # Run for X seconds
+					else:
+						break
+				platform.DeActivatePump(pump_number)
+
 
 	status['status']['active'] = 0
 	status['control']['stop'] = 0
-	status['control']['clean'] = 0
+	status['control']['clean'] = ""
 	WriteStatus(status)
 
 
@@ -191,7 +189,7 @@ def main():
 		"start": 0,
 		"pause": 0,
 		"stop": 0,
-		"clean": 0,
+		"clean": "",
 		"drink_name": ""
 		}
 	WriteStatus(status)
@@ -205,11 +203,7 @@ def main():
 					event = 'Drink requested: ' + status['control']['drink_name']
 					WriteLog(event)
 					PourDrink(status['control']['drink_name'])
-				elif status['control']['clean'] == 42:
-					event = 'Clean requested for all pumps. (code: 42)'
-					WriteLog(event)
-					CleanPump(42)
-				elif status['control']['clean'] > 0:
+				elif status['control']['clean'] != "":
 					event = 'Clean requested for pump: ' + str(status['control']['clean'])
 					WriteLog(event)
 					CleanPump(status['control']['clean'])

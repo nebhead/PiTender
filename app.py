@@ -118,10 +118,10 @@ def do_work(action=None):
 			status['control']['start'] = 1
 			status['control']['pause'] = 0
 			status['control']['stop'] = 0
-			status['control']['clean'] = 0
+			status['control']['clean'] = ""
 			status['control']['drink_name'] = drink_name
 			WriteStatus(status)
-			return render_template('work.html', drink_name=drink_name)
+			return render_template('work.html', drink_name=drink_name, action="default")
 
 	return redirect('/')
 
@@ -132,7 +132,7 @@ def data_dump(action=None):
 	status = ReadStatus()
 	percent_done = status['status']['progress']
 	percent_done_text = str(percent_done) + "%"
-	if (status['control']['clean'] > 0):
+	if (status['control']['clean'] != ""):
 		mode = 'clean'
 	else:
 		mode = 'dispense'
@@ -373,10 +373,10 @@ def admin(action=None):
 			status['control']['start'] = 0
 			status['control']['pause'] = 0
 			status['control']['stop'] = 0
-			status['control']['clean'] = 42
+			status['control']['clean'] = "all"
 			status['control']['drink_name'] = 'empty'
 			WriteStatus(status)
-			return render_template('work.html', drink_name=drink_name)
+			return render_template('work.html', drink_name=drink_name, action="default")
 		else:
 			for pump_number, pin_number in settings['assignments'].items():
 				if(pump_number in response['clean']):
@@ -386,10 +386,10 @@ def admin(action=None):
 					status['control']['start'] = 0
 					status['control']['pause'] = 0
 					status['control']['stop'] = 0
-					status['control']['clean'] = int(pump_number[-1:])
+					status['control']['clean'] = pump_number
 					status['control']['drink_name'] = 'empty'
 					WriteStatus(status)
-			return render_template('work.html', drink_name=drink_name)
+			return render_template('work.html', drink_name=drink_name, action="default")
 
 	if action == 'reboot':
 		event = "Admin: Reboot"

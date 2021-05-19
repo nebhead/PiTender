@@ -87,13 +87,13 @@ echo "**      Configuring nginx...                                           **"
 echo "**                                                                     **"
 echo "*************************************************************************"
 # Move into install directory
-cd ~/pitender
+# cd ~/pitender
 
 # Delete default configuration
 $SUDO rm /etc/nginx/sites-enabled/default
 
 # Copy configuration file to nginx
-$SUDO cp proxy.nginx /etc/nginx/sites-available/pitender
+$SUDO cp ~/pitender/proxy.nginx /etc/nginx/sites-available/pitender
 
 # Create link in sites-enabled
 $SUDO ln -s /etc/nginx/sites-available/pitender /etc/nginx/sites-enabled
@@ -111,9 +111,9 @@ echo "*************************************************************************"
 
 # Copy configuration files (control.conf, webapp.conf) to supervisor config directory
 # NOTE: If you used a different directory for the installation then make sure you edit the *.conf files appropriately
-cd ~/pitender/supervisor
+# cd ~/pitender/supervisor
 
-$SUDO cp *.conf /etc/supervisor/conf.d/
+$SUDO cp ~/pitender/supervisor/*.conf /etc/supervisor/conf.d/
 
 SVISOR=$(whiptail --title "Would you like to enable the supervisor WebUI?" --radiolist "This allows you to check the status of the supervised processes via a web browser, and also allows those processes to be restarted directly from this interface. (Recommended)" 20 78 2 "ENABLE_SVISOR" "Enable the WebUI" ON "DISABLE_SVISOR" "Disable the WebUI" OFF 3>&1 1>&2 2>&3)
 

@@ -28,7 +28,7 @@ def ReadStatus():
 			"start": 0,
 			"pause": 0,
 			"stop": 0,
-			"clean": 0,
+			"clean": "",
 			"drink_name": ""
 			}
 
@@ -78,8 +78,8 @@ def ReadSettings():
 			"pump_04": 23,
 			"pump_05": 24,
 			"pump_06": 25,
-			"pump_07": 0,
-			"pump_08": 0
+			"pump_07": 2,
+			"pump_08": 3
 			}
 
 		settings['flowrate'] = 85
