@@ -2,7 +2,7 @@
 
 # PiTender Flask/Python script
 
-from flask import Flask, flash, url_for, request, render_template, make_response, redirect
+from flask import Flask, flash, url_for, request, render_template, make_response, jsonify, redirect
 import time
 import os
 import json
@@ -107,7 +107,7 @@ def do_work(action=None):
 		status['control']['stop'] = 1
 		#print ('Cancel Requested, stop = ' + str(status['control']['stop']) )
 		WriteStatus(status)
-		return render_template('work.html', action=action)
+		return render_template('work.html', action=action, workmode='cancel')
 
 	if (request.method == 'POST') and (status['status']['active'] == 0):
 		response = request.form
@@ -121,23 +121,16 @@ def do_work(action=None):
 			status['control']['clean'] = ""
 			status['control']['drink_name'] = drink_name
 			WriteStatus(status)
-			return render_template('work.html', drink_name=drink_name, action="default")
+			return render_template('work.html', drink_name=drink_name, action="default", workmode='dispense')
 
 	return redirect('/')
 
-@app.route('/data/<action>', methods=['POST','GET'])
-@app.route('/data', methods=['POST','GET'])
-def data_dump(action=None):
-
+@app.route('/workstatus')
+def workstatus(action=None):
 	status = ReadStatus()
 	percent_done = status['status']['progress']
-	percent_done_text = str(percent_done) + "%"
-	if (status['control']['clean'] != ""):
-		mode = 'clean'
-	else:
-		mode = 'dispense'
 
-	return render_template('data.html', percent_done=percent_done, percent_done_text=percent_done_text, mode=mode)
+	return jsonify({ 'percent_done' : percent_done })
 
 @app.route('/recipe/<action>', methods=['POST'])
 @app.route('/recipe', methods=['POST','GET'])
@@ -376,7 +369,7 @@ def admin(action=None):
 			status['control']['clean'] = "all"
 			status['control']['drink_name'] = 'empty'
 			WriteStatus(status)
-			return render_template('work.html', drink_name=drink_name, action="default")
+			return render_template('work.html', drink_name=drink_name, action="default", workmode='clean')
 		else:
 			for pump_number, pin_number in settings['assignments'].items():
 				if(pump_number in response['clean']):
@@ -389,7 +382,7 @@ def admin(action=None):
 					status['control']['clean'] = pump_number
 					status['control']['drink_name'] = 'empty'
 					WriteStatus(status)
-			return render_template('work.html', drink_name=drink_name, action="default")
+			return render_template('work.html', drink_name=drink_name, action="default", workmode='clean')
 
 	if action == 'reboot':
 		event = "Admin: Reboot"

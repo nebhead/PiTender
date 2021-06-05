@@ -1,41 +1,291 @@
-{% extends 'base.html' %}
 
-{% block head %} 
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<!-- Redirects on Action -->
 	{% if "cancel" in action %}
       <meta http-equiv="refresh" content="1;url=/" />
     {% endif %}
-{% endblock %}
 
-{% block title %} Drink Menu {% endblock %}
+    <!-- Bootstrap CSS -->
+    {% if pagetheme == 'bootstrap' %}
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
+    {% elif pagetheme == 'flatly' %}
+    <link href="{{ url_for('static', filename='css/bootstrap-flatly.css') }}" rel="stylesheet">
+    {% elif pagetheme == 'darkly' %}
+    <link href="{{ url_for('static', filename='css/bootstrap-darkly.css') }}" rel="stylesheet">
+    {% else %}
+    <link href="{{ url_for('static', filename='css/bootstrap-flatly.css') }}" rel="stylesheet">
+    {% endif %}
 
-{% block content %} 
+	{% if workmode == 'dispense' %}
+	<link href="{{ url_for('static', filename='css/dispense.css') }}" rel="stylesheet">
+	{% endif %}
 
-  	<div class="container">
-				<div class="card">
-				  <div class="card-body">
-						{% if "cancel" in action %}
-						<center>
-								<H1>Cancelling...</H1><br>
-								Please wait.
-			        </center>
-			      {% else %}
-							<!-- Load Refreshable Data (progress bar) -->
-							<div id="refreshdata"></div>
-			      {% endif %}
+    <!-- WebApp Manifest -->
+    <link rel="manifest" href="{{ url_for('manifest') }}">
 
+    <!-- Favicon -->
+    <link href="{{ url_for('static', filename='img/favicon.ico') }}" rel="icon" type="image/x-icon" />
+    
+    <!-- Apple Icons  -->
+    <link rel="apple-touch-icon"  sizes="96x96" href="{{ url_for('static', filename='img/launcher-icon-2x.png') }}"/>
+    <link rel="apple-touch-icon"  sizes="144x144" href="{{ url_for('static', filename='img/launcher-icon-3x.png') }}"/>
+    <link rel="apple-touch-icon"  sizes="192x192" href="{{ url_for('static', filename='img/launcher-icon-4x.png') }}"/>
+    
+    <!-- Page Title  -->
+    <title>Doing some work... </title>
+  </head>
+  <body>
+	{% if workmode != 'dispense' %}
+	<!-- Navbar Header -->
+	<nav class="navbar sticky-top navbar-dark bg-primary">
+
+		<a class="navbar-brand" href="/">
+			<b><i class="fas fa-cocktail"></i>&nbsp;Pi<i class="text-success">Tender</i></b></a>
+
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="nav navbar-nav mr-auto">
+					<li class="nav-item">
+						<a class="nav-link" href="/"><i class="far fa-list-alt"></i>&nbsp; Drink Menu</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/recipe"><i class="fas fa-blender"></i>&nbsp; Recipe Builder</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/admin"><i class="fas fa-cogs"></i>&nbsp; Settings & Admin</a>
+					</li>
+				</ul>
+			</div>
+	</nav><br>
+	{% endif %}
+	<div class="container">
+		{% if workmode == 'cancel' %}
+			<div class="card">
+				<div class="card-body text-center">
+					<H1>Cancelling...</H1><br>
+						Please wait.
+				</div>
+			</div>
+		
+		{% elif workmode == 'clean' %}
+			<div class="row">
+			  <div class="col text-center">
+				  <h3> Cleaning </h3><br>
+				  <div class="row">
+					  <div class="col text-center">
+					  <div id="CleanStatus" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"> <b>0 %</b> </div>
+					  </div>
+				  </div><br>
+				  <a href="/work/cancel" class="btn btn-danger" role="button" id="cancelbutton">Cancel</a>
+				  <a href="/admin" class="btn btn-success" role="button" id="donebutton">Finished</a>
+				</div>
+			</div>
+
+
+		{% elif workmode == 'dispense' %}
+			<!-- Load Refreshable Data (progress bar) -->
+			<!-- Code for drink loading animation courtesy of https://codepen.io/MarcMalignan -->
+
+			<div id="loader">
+					<div id="lemon"></div>
+					<div id="straw"></div>
+					<div id="glass">
+						<div id="cubes">
+							<div></div>
+							<div></div>
+							<div></div>
+						</div>
+						<div id="drink"></div>
+						<span id="counter"></span>
+					</div>
+					<div id="coaster"></div>
+			</div>
+
+			<h4 class="text-center text-white" id="statusMessage">Please wait while we fill up your glass...</h4><br>
+
+			<a href="/work/cancel" class="btn btn-danger" role="button" id="cancelbutton">Cancel</a>
+			<a href="/" class="btn btn-success" role="button" id="donebutton">Enjoy!</a>
+
+
+		{% else %}
+
+			<div class="row">
+				<div class="col text-center">
+					<h3>Something weird happened.</h3>
+				</div>
+			</div>
+			<br>
+			<div class="row">
+				<div class="col text-center">
+				<form name="input" action="/" method="POST">
+					<button type="submit" name="return_menu" value="success" class="btn btn-success">Return to Menu</button>
+				</form>
+				</div>
+			</div>
+
+		{% endif %}
 				  </div>
 				</div>
   	</div> <!-- End Showcase -->
-{% endblock %}
 
-{% block scripts %}  
+<!-- jQuery and Bootstrap Bundle (includes Popper) -->
+<script src="{{ url_for('static', filename='js/jquery-3.5.1.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+<!-- Font Awesome -->
+<script src="{{ url_for('static', filename='js/all.js') }}"></script>
+
+{% if workmode == 'dispense' %}
+
 <script>
-  $(document).ready(function(){
-    $('#refreshdata').load("/data");
-    setInterval(function(){
-      $('#refreshdata').load("/data");
-    }, 1000);
-  });
+	var worker = null;
+	$('#donebutton').hide();
+
+	$(document).ready(function(){
+		// Get data on page load
+		req = $.ajax({
+			url : '/workstatus',
+			type : 'GET'
+		});
+
+		req.done(function(data) {
+			// Update work status
+			// Returned Data: 
+			// 'data.percent_done'
+
+			// Code for drink loading animation courtesy of https://codepen.io/MarcMalignan
+			var loaded = data.percent_done;
+
+			$('#lemon').hide();
+			$('#straw').hide();
+			$('#cubes div').hide();
+
+			$('#counter').html(loaded+'%');
+			$('#drink').css('top', (100-loaded*.9)+'%');
+			if(loaded==25) $('#cubes div:nth-child(1)').fadeIn(100);
+			if(loaded==50) $('#cubes div:nth-child(2)').fadeIn(100);
+			if(loaded==75) $('#cubes div:nth-child(3)').fadeIn(100);
+			if(loaded==100) {
+				$('#lemon').fadeIn(100);
+				$('#straw').fadeIn(300);
+				stopWorking();
+			};
+		});
+
+		// Get data every 1 second
+		function drawDrink() {
+			req = $.ajax({
+				url : '/workstatus',
+				type : 'GET'
+			});
+
+			req.done(function(data) {
+				// Update work status
+				// Returned Data: 
+				// 'data.percent_done'
+
+				// Code for drink loading animation courtesy of https://codepen.io/MarcMalignan
+				loaded = data.percent_done;
+
+				$('#counter').html(loaded+'%');
+				$('#drink').css('top', (100-loaded*.9)+'%');
+				if(loaded==25) $('#cubes div:nth-child(1)').fadeIn(100);
+				if(loaded==50) $('#cubes div:nth-child(2)').fadeIn(100);
+				if(loaded==75) $('#cubes div:nth-child(3)').fadeIn(100);
+				if(loaded==100) {
+					$('#lemon').fadeIn(100);
+					$('#straw').fadeIn(300);
+					stopWorking();
+				};
+			});
+		}; 
+
+		function stopWorking() {
+			console.log('stopWorking');
+    		clearInterval(worker);
+			$('#cancelbutton').hide();
+			$('#statusMessage').html('All done!');
+			$('#donebutton').show();
+			setTimeout(function() {
+				location.replace("/");
+			}, 30000); // Redirect to home page 30 seconds after cleaning completed
+		}
+
+		worker = setInterval(drawDrink, 1000);
+
+	});
+
 </script>
-{% endblock %}
+
+{% elif workmode == 'clean' %}
+
+<script>
+	var worker = null;
+	$('#donebutton').hide();
+
+	$(document).ready(function(){
+		// Get data on page load
+		req = $.ajax({
+			url : '/workstatus',
+			type : 'GET'
+		});
+
+		req.done(function(data) {
+			// Update work status
+			// Returned Data: 
+			// 'data.percent_done'
+			document.getElementById("CleanStatus").style.width = data.percent_done + "%";
+			document.getElementById("CleanStatus").innerHTML = data.percent_done + "%";
+			});
+
+		// Get data every 1 second
+		function drawCleanStatus() {
+			req = $.ajax({
+				url : '/workstatus',
+				type : 'GET'
+			});
+
+			req.done(function(data) {
+				// Update work status
+				// Returned Data: 
+				// 'data.percent_done'
+				document.getElementById("CleanStatus").style.width = data.percent_done + "%";
+				document.getElementById("CleanStatus").innerHTML = data.percent_done + "%";
+				if(data.percent_done==100) {
+					console.log('stopWorking');
+					stopWorking();
+				};
+			});
+		};
+		
+		function stopWorking() {
+			console.log('Stopping Cleaning.');
+    		clearInterval(worker);
+			$('#cancelbutton').hide();
+			$('#donebutton').show();
+			setTimeout(function() {
+				location.replace("/admin");
+			}, 2000); // Redirect to admin page 2 seconds after cleaning completed
+		}
+
+		worker = setInterval(drawCleanStatus, 1000);
+
+	});
+
+</script>
+
+{% else %}
+
+<!-- Debug Message: Other Mode -->
+
+{% endif %}
+
+</body>
+</html>
