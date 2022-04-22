@@ -118,77 +118,12 @@ OR if that doesn't seem to work for you, try:
 
 ```
 wget https://raw.githubusercontent.com/nebhead/pitender/master/auto-install/install.sh
-sh install.sh
+bash install.sh
 ```
+
+NOTE:  Do not use SUDO with the above commands.  The installation script will obtain sudo privledges automatically.  
 
 Follow the onscreen prompts to complete the installation.  At the end of the script it will reboot, so just be aware of this.  
-
-### Manual Software Installation
-
-If the auto-install script fails or if you just want to have more control over the installation process, you can follow the following steps.  
-
-Install dependencies.  
-
-#### Install Git, Python PIP, Flask, Gunicorn, nginx, and supervisord
-```
-sudo apt update
-sudo apt upgrade
-sudo apt install python3-dev python3-pip python3-rpi.gpio nginx git gunicorn3 supervisor -y
-sudo pip3 install flask
-
-git clone https://github.com/nebhead/pitender
-```
-
-### Setup nginx to proxy to gunicorn
-
-```
-# Move into install directory
-cd ~/pitender
-
-# Delete default configuration
-sudo rm /etc/nginx/sites-enabled/default
-
-# Copy configuration file to nginx
-sudo cp proxy.nginx /etc/nginx/sites-available/pitender
-
-# Create link in sites-enabled
-sudo ln -s /etc/nginx/sites-available/pitender /etc/nginx/sites-enabled
-
-# Restart nginx
-sudo service nginx restart
-```
-
-### Setup Supervisor to Start Apps on Boot / Restart on Failures
-
-```
-# Move into garage-zero install directory
-cd ~/pitender/supervisor
-
-# Copy configuration files (control.conf, webapp.conf) to supervisor config directory
-# NOTE: If you used a different directory for this app then make sure you edit the *.conf files appropriately
-sudo cp *.conf /etc/supervisor/conf.d/
-
-# If supervisor isn't already running, startup Supervisor
-sudo service supervisor start
-
-# If supervisor is running already, just reload the config files
-sudo supervisorctl reread
-sudo supervisorctl update
-
-# Or just reboot and supervisord should kick everything off
-sudo reboot
-```
-Optionally, you can use supervisor's built in HTTP server to monitor the scripts.
-
-Inside of /etc/supervisor/supervisord.conf, add this:
-
-```
-[inet_http_server]
-port = 9001
-username = user
-password = pass
-```
-If we access our server in a web browser at port 9001, we'll see the web interface that shows the status of the two scripts (WebApp and Control).  This gives you a quick and easy way to monitor whether any of the scripts has stopped functioning.  
 
 ## Using The App
 If you've configured the supervisord correctly, the application scripts should run upon a reboot.  Once the system is up and running, you should be able to access the WebUI via a browser on your smart phone, tablet or PC device.  

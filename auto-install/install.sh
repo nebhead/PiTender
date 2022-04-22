@@ -11,7 +11,7 @@
 # or
 #
 # wget https://raw.githubusercontent.com/nebhead/pitender/master/auto-install/install.sh
-# ./install.sh 
+# bash install.sh 
 
 # Must be root to install
 if [[ $EUID -eq 0 ]];then
@@ -24,7 +24,7 @@ else
         export SUDO="sudo"
         export SUDOE="sudo -E"
     else
-        echo "Please install sudo or run this as root."
+        echo "Please install sudo."
         exit 1
     fi
 fi
@@ -77,7 +77,8 @@ echo "**                                                                     **"
 echo "**      Cloning Software from GitHub...                                **"
 echo "**                                                                     **"
 echo "*************************************************************************"
-git clone https://github.com/nebhead/pitender
+cd /usr/local/bin
+$SUDO git clone https://github.com/nebhead/pitender
 
 ### Setup nginx to proxy to gunicorn
 clear
@@ -87,13 +88,13 @@ echo "**      Configuring nginx...                                           **"
 echo "**                                                                     **"
 echo "*************************************************************************"
 # Move into install directory
-# cd ~/pitender
+cd /usr/local/bin/pitender/auto-install/nginx
 
 # Delete default configuration
 $SUDO rm /etc/nginx/sites-enabled/default
 
 # Copy configuration file to nginx
-$SUDO cp ~/pitender/proxy.nginx /etc/nginx/sites-available/pitender
+$SUDO cp proxy.nginx /etc/nginx/sites-available/pitender
 
 # Create link in sites-enabled
 $SUDO ln -s /etc/nginx/sites-available/pitender /etc/nginx/sites-enabled
@@ -111,9 +112,9 @@ echo "*************************************************************************"
 
 # Copy configuration files (control.conf, webapp.conf) to supervisor config directory
 # NOTE: If you used a different directory for the installation then make sure you edit the *.conf files appropriately
-# cd ~/pitender/supervisor
+# cd /usr/local/bin/usr/local/bin/pitender/auto-install/supervisor
 
-$SUDO cp ~/pitender/supervisor/*.conf /etc/supervisor/conf.d/
+$SUDO cp /usr/local/bin/pitender/auto-install/supervisor/*.conf /etc/supervisor/conf.d/
 
 SVISOR=$(whiptail --title "Would you like to enable the supervisor WebUI?" --radiolist "This allows you to check the status of the supervised processes via a web browser, and also allows those processes to be restarted directly from this interface. (Recommended)" 20 78 2 "ENABLE_SVISOR" "Enable the WebUI" ON "DISABLE_SVISOR" "Disable the WebUI" OFF 3>&1 1>&2 2>&3)
 

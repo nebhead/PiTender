@@ -1,0 +1,14 @@
+
+__pycache__/
+
+drink_db_backup.json
+
+logs/events.log
+
+*.code-workspace
+
+status.json
+
+*.bak
+
+settings.json
